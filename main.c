@@ -18,17 +18,21 @@ void startBuffer(void **pBuffer){
     }
 
     *(int *)*pBuffer = (SIZE_FIX_BUFFER); // OFFSET
-    *((int *)*pBuffer + 1) = 0;  // NUMBER PEOPLE
-    *((int *)*pBuffer + 2) = 0;  // AUXILIARY 1
-    *((char *)*pBuffer + 3) = '\0';  // AUXILIARY 2
+    *((int *)*pBuffer + 1) = 0; // NUMBER PEOPLE
+    *((int *)*pBuffer + 2) = 0; // AUXILIARY 1
+    *((char *)*pBuffer + 3) = '\0'; // AUXILIARY 2
 }
 
 // Define Pointers
 void pointers(void **pBuffer){
-    pOffset = (int *)*pBuffer;                 
-    pNumPeople = ((int *)*pBuffer + 1);                
+    pOffset = (int *)*pBuffer; 
+    pNumPeople = ((int *)*pBuffer + 1); 
     pAuxiliary1 = ((int *)*pBuffer + 2);
     pAuxiliary2 = ((int *)*pBuffer + 3);
+}
+
+void FlushStdin() {
+    while(getchar() != '\n');
 }
 
 void addPerson(void **pBuffer){
@@ -39,8 +43,12 @@ void addPerson(void **pBuffer){
     printf("Enter name: ");
     fgets((char *)pAuxiliary2, SIZE_STRING, stdin);
     char *pName = strchr((char *)pAuxiliary2, '\n');
-    if (pName)  
+    if (pName) 
         *pName = '\0';
+    else{
+        *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
+        FlushStdin();
+    }
 
     *(int *)pAuxiliary1 = strlen((char *)pAuxiliary2) + sizeof(char) + *(int *)pOffset;
 
@@ -79,7 +87,12 @@ void addPerson(void **pBuffer){
     printf("Enter email: ");
     fgets((char *)pAuxiliary2, SIZE_STRING, stdin);
     char *pEmail = strchr((char *)pAuxiliary2, '\n');
-    if (pEmail) *pEmail = '\0';
+    if (pEmail) 
+        *pEmail = '\0';
+    else{
+        *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
+        FlushStdin();
+    }
     
     *(int *)pAuxiliary1 = strlen((char *)pAuxiliary2) + sizeof(char) + *(int *)pOffset;
 
@@ -110,7 +123,7 @@ void *printPerson(void *aux){
 }
 
 void listPeople(void **pBuffer) {
-    if(*(int *)pOffset  == SIZE_FIX_BUFFER){
+    if(*(int *)pOffset == SIZE_FIX_BUFFER){
         printf("\n>>>>>>>> Empty agenda <<<<<<<<\n");
         return;
     }
@@ -132,28 +145,30 @@ void *searchPerson(void **pBuffer){
         printf("\n>>>>>>>> Empty agenda <<<<<<<<\n");
         return NULL;
     }
-    
+ 
     getchar();
     printf("\nEnter name: ");
     fgets((char *)pAuxiliary2, SIZE_STRING, stdin);
     char *pName = strchr((char *)pAuxiliary2, '\n');
-    if (pName)  
+    if (pName) 
         *pName = '\0';
+    else{
+        *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
+        FlushStdin();
+    }
 
     void *aux = (char *)*pBuffer + SIZE_FIX_BUFFER;
     *(int *)pAuxiliary1 = SIZE_FIX_BUFFER;
-    void *p;
 
-    while (*(int *)pAuxiliary1 < *(char*)*pBuffer){
-        p = (int *)strcmp(aux, (char *)pAuxiliary2);
-
-        if(!p)
+    while (*(int *)pAuxiliary1 < *(int *)pOffset){
+        if(strcmp(aux, (char *)pAuxiliary2) == 0)
             return aux;
         
-        *(int *)pAuxiliary1 = *(int *)pAuxiliary1 + strlen((char *)aux) + sizeof(int) + strlen((char *)aux + 2) + (2 * sizeof(char));
+        *(int *)pAuxiliary1 += strlen((char *)aux) + sizeof(int) + sizeof(char);
 
         aux += strlen((char *)aux) + 1;
-        aux += sizeof(int) + 1;
+        aux += sizeof(int);
+        *(int *)pAuxiliary1 += strlen((char *)aux) + sizeof(char);
         aux += strlen((char *)aux) + 1;
     }
 
@@ -211,28 +226,28 @@ int main(){
     pointers(&pBuffer);
 
     while(1){
-        printf("\n------------ MENU ------------\n");
-        printf("1. Add Person\n");
-        printf("2. Delete Person\n");
-        printf("3. Search Person\n");
-        printf("4. List all\n");
-        printf("5. Exit\n");
-        printf("Enter your option: ");
-        scanf("%d", (int *)pAuxiliary1);
+    printf("\n------------ MENU ------------\n");
+    printf("1. Add Person\n");
+    printf("2. Delete Person\n");
+    printf("3. Search Person\n");
+    printf("4. List all\n");
+    printf("5. Exit\n");
+    printf("Enter your option: ");
+    scanf("%d", (int *)pAuxiliary1);
 
         switch (*(int *)pAuxiliary1){
-        case 1:
+            case 1:
             (*(int *)pNumPeople)++;
             printf("\nPerson %d\n", *(int *)pNumPeople);
             addPerson(&pBuffer);
             printf("\n>>>>>>>> PERSON ADDED <<<<<<<<\n");
             break;
-        
-        case 2:
+            
+            case 2:
             deletePerson(&pBuffer);
             break;
-        
-        case 3:
+            
+            case 3:
             p = searchPerson(&pBuffer);
             if(p){
                 printf("\n-------- PERSON FOUND --------\n");
@@ -241,20 +256,19 @@ int main(){
             }
             break;
 
-        case 4:
+            case 4:
             listPeople(&pBuffer);
             break;
-        
-        case 5:
+            
+            case 5:
             free(pBuffer);
             exit(1);
             break;
 
-        default:
+            default:
             printf("\nInvalid option. Try again!\n");
             break;
         }
     }
-
     return 0;
 }
