@@ -13,7 +13,7 @@
 // Global Variables
 void *pOffset, *pNumPeople, *pAuxiliary1, *pAuxiliary2;
 
-// Start Buffer
+// Allocates memory to the buffer with the size of the header
 void startBuffer(void **pBuffer){
     *pBuffer = (void *)malloc(SIZE_FIX_BUFFER);
 
@@ -28,7 +28,7 @@ void startBuffer(void **pBuffer){
     *((char *)*pBuffer + 3) = '\0'; // AUXILIARY 2
 }
 
-// Define Pointers
+// Updates pointers to correct memory
 void pointers(void **pBuffer){
     pOffset = (int *)*pBuffer; 
     pNumPeople = ((int *)*pBuffer + 1); 
@@ -36,10 +36,12 @@ void pointers(void **pBuffer){
     pAuxiliary2 = ((int *)*pBuffer + 3);
 }
 
-void FlushStdin() {
+// Clears the keyboard buffer
+void flushStdin() {
     while(getchar() != '\n');
 }
 
+// Add a new person to the agenda
 void addPerson(void **pBuffer){
     char *person;
 
@@ -52,7 +54,7 @@ void addPerson(void **pBuffer){
         *pName = '\0';
     else{
         *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
-        FlushStdin();
+        flushStdin();
     }
 
     *(int *)pAuxiliary1 = strlen((char *)pAuxiliary2) + sizeof(char) + *(int *)pOffset;
@@ -96,7 +98,7 @@ void addPerson(void **pBuffer){
         *pEmail = '\0';
     else{
         *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
-        FlushStdin();
+        flushStdin();
     }
     
     *(int *)pAuxiliary1 = strlen((char *)pAuxiliary2) + sizeof(char) + *(int *)pOffset;
@@ -114,6 +116,7 @@ void addPerson(void **pBuffer){
     *(int *)pOffset = *(int *)pAuxiliary1;
 }
 
+// Prints the person's data
 void *printPerson(void *aux){
     printf("\nName: %s", (char *)aux);
     aux = ((char *)aux + strlen((char *)aux) + 1);
@@ -127,6 +130,7 @@ void *printPerson(void *aux){
     return aux;
 }
 
+// List all people
 void listPeople(void **pBuffer) {
     if(*(int *)pOffset == SIZE_FIX_BUFFER){
         printf("\n>>>>>>>> Empty agenda <<<<<<<<\n");
@@ -145,6 +149,7 @@ void listPeople(void **pBuffer) {
     printf("\n------------------------------\n");
 }
 
+// Search for a person in the agenda
 void *searchPerson(void **pBuffer){
     if(*(int *)pOffset == SIZE_FIX_BUFFER){
         printf("\n>>>>>>>> Empty agenda <<<<<<<<\n");
@@ -159,7 +164,7 @@ void *searchPerson(void **pBuffer){
         *pName = '\0';
     else{
         *((char *)*pBuffer + 3 + SIZE_STRING) = '\0';
-        FlushStdin();
+        flushStdin();
     }
 
     void *aux = (char *)*pBuffer + SIZE_FIX_BUFFER;
@@ -181,6 +186,7 @@ void *searchPerson(void **pBuffer){
     return NULL;
 }
 
+// Delete a person from the agenda
 void deletePerson(void **pBuffer){
     void *p = searchPerson(pBuffer);
     if (p == NULL) 
